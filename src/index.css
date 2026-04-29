@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #fff5fa;
+    --foreground: #111827;
+    --card: #ffffff;
+    --card-foreground: #111827;
+    --border: #fce7f3;
+    --primary: #d946ef;
+    --primary-foreground: #ffffff;
+    --secondary: #fdf4ff;
+    --secondary-foreground: #111827;
+    --muted: #fdf2f8;
+    --muted-foreground: #6b7280;
+    --destructive: #ef4444;
+    --ring: #d946ef;
+  }
+
+  .dark {
+    --background: #1e1b4b;
+    --foreground: #fdf4ff;
+    --card: #312e81;
+    --card-foreground: #fdf4ff;
+    --border: #4c1d95;
+    --primary: #d946ef;
+    --primary-foreground: #ffffff;
+    --secondary: #4c1d95;
+    --secondary-foreground: #fdf4ff;
+    --muted: #4338ca;
+    --muted-foreground: #a5b4fc;
+    --destructive: #ef4444;
+    --ring: #d946ef;
+  }
+
+  html {
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
+  }
+}
