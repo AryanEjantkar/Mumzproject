@@ -1,73 +1,117 @@
-# React + TypeScript + Vite
+# ReviewNest-Smart Review Analyzer
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An AI-powered system that transforms large volumes of product reviews into a clear, structured, and trustworthy verdict to help moms make better shopping decisions.
 
-Currently, two official plugins are available:
+---
+## 📘 Table of Contents
+- [Features](#-features)
+- [System Architecture](#-system-architecture)
+- [Workflow](#-workflow)
+- [Tech Stack](#-tech-stack)
+- [Installation](#-installation--usage)
+- [Future Enhancements](#-future-enhancements)
+- [LLM Prompts Used](#-llm-prompts-used-to-create-this-project)
+- [Author](#-author)
+---
+## Features
+- Input 50–200 product reviews  
+- AI-powered extraction of pros and cons
+- Sentiment scoring (overall product quality)
+- Structured output (clean JSON format)
+- Confidence score for reliability
+- Multilingual support (English + Arabic)
+- Handles uncertainty (low confidence cases)
+---
+## System Architecture
+![Architecture Diagram](/arci.png)
+![Architecture Diagram](/archi.png)
+> The system processes large review data using chunking, aggregation, and LLM-based reasoning to generate a reliable final verdict.
+---
+## Workflow
+1. Paste product reviews (50–200) 
+2. Click Generate Verdict 
+3. System analyzes reviews in chunks  
+4. Aggregates insights
+5. Displays:Pros
+   -Cons
+  -Sentiment score
+  -Final verdict
+  -Confidence score
+---
+##  Tech Stack
+| Layer | Technology |
+|--------|-------------|
+| Frontend | React + Tailwind CSS |
+| Backend | Python (FastAPI) |
+| LLM | Gemini |
+| Processing | Custom chunking + aggregation |
+| Validation|Pydantic |
+| Deployment | Vercel / Streamlit Cloud |
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
+##  Installation & Usage
+git clone https://github.com/your-username/momsverdict-ai.git
+cd momsverdict-ai
 
-## React Compiler
+# Backend
+pip install -r requirements.txt
+uvicorn app:app --reload
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Frontend
+cd frontend
+npm install
+npm run dev
 
-## Expanding the ESLint configuration
+---
+##  Future Enhancements
+- Product comparison engine
+- Review authenticity detection (fake reviews)
+- Personalized product recommendations
+- Advanced analytics dashboard
+- Cloud-based review storage
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+ ---
+ ## LLM Prompts Used to Create This Project
+ This project was developed using Large Language Models (LLMs) such as Gemini and GPT, assisting in system design, evaluation, and UI generation.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+ ---
+ ### 1.Project Ideation
+ > Suggest an AI system that summarizes large volumes of product reviews into structured insights (pros, cons, sentiment, verdict, confidence) for e-commerce users, especially moms.
+---
+### 2.Architecture Design
+> Design a scalable pipeline for processing 100+ reviews using chunking, aggregation, and LLM-based summarization. Include validation and confidence scoring.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
+### 3.Core Functionality
+> Write Python code to process large text inputs in chunks, extract key insights (pros/cons), and aggregate them into a final structured output.
+---
+### 4.UI/UX Design
+> Design a modern SaaS-style interface for a review summarization tool with sections for input, analysis, and structured output display.
+---
+### 5. Multilingual Output
+> Generate output in both English and Arabic with natural phrasing, not literal translation.
+---
+### 6.Evaluation Design
+> Suggest evaluation metrics for a review summarization system, including sentiment accuracy, coverage, hallucination detection, and confidence scoring.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+---
+👨‍💻 Author
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Aryan Vimal Ejantkar
+🎓 B.Tech (AIML) – VIT Bhopal
+💼 Passionate about AI, ML, and automation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+ 
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+
+
+
+
+
+  
+---
+ 
+
+
