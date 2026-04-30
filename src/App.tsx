@@ -8,35 +8,6 @@ import { Loader } from "./components/Loader";
 import { AlertTriangle, Sparkles, Moon, Sun } from "lucide-react";
 import { generateVerdict } from "./lib/ai";
 
-const MOCK_VERDICT_EN: VerdictData = {
-  pros: [
-    "High quality materials and very durable.",
-    "Easy to clean and maintain.",
-    "Baby sleeps soundly through the night."
-  ],
-  cons: [
-    "A bit bulky for travel.",
-    "Price is slightly higher than competitors."
-  ],
-  sentimentScore: 85,
-  verdict: "Overall, an excellent product for daily home use. While it's slightly expensive and bulky, the durability and comfort it provides make it highly recommended by most mothers.",
-  confidenceScore: 92,
-};
-
-const MOCK_VERDICT_AR: VerdictData = {
-  pros: [
-    "مواد عالية الجودة ومتينة للغاية.",
-    "سهل التنظيف والصيانة.",
-    "ينام الطفل بعمق طوال الليل."
-  ],
-  cons: [
-    "كبير الحجم قليلاً للسفر.",
-    "السعر أعلى قليلاً من المنافسين."
-  ],
-  sentimentScore: 85,
-  verdict: "بشكل عام، منتج ممتاز للاستخدام المنزلي اليومي. على الرغم من أنه غالي الثمن وضخم قليلاً، إلا أن المتانة والراحة التي يوفرها تجعله موصى به بشدة من قبل معظم الأمهات.",
-  confidenceScore: 92,
-};
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
