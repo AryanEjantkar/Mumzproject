@@ -24,3 +24,13 @@ dist-ssr
 *.sw?
 
 .env
+backend/.env
+
+# Python virtual environment
+.venv
+__pycache__/
+*.pyc
+
+# Keep example files in git
+!.env.example
+!backend/.env.example

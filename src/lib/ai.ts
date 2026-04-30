@@ -1,25 +1,17 @@
 import type { VerdictData } from '../components/VerdictCard';
 
 export async function generateVerdict(reviews: string, language: string): Promise<VerdictData> {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  const model = import.meta.env.VITE_GEMINI_MODEL || "gemini-2.5-flash";
+  // Split reviews by newline and filter out empty strings
+  const reviewArray = reviews
+    .split('\n')
+    .map(r => r.trim())
+    .filter(r => r.length > 0);
 
-  if (!apiKey) {
-    throw new Error("API Key is missing. Please add VITE_GEMINI_API_KEY to your .env file.");
+  if (reviewArray.length === 0) {
+    throw new Error("No valid reviews provided.");
   }
 
-  const systemPrompt = `You are an expert product reviewer assistant. Analyze the following product reviews and provide a summary.
-The response MUST be in ${language === 'ar' ? 'Arabic' : 'English'}.
-Provide the output as a JSON object with the exact following structure, no markdown formatting:
-{
-  "pros": ["pro 1", "pro 2", "pro 3"],
-  "cons": ["con 1", "con 2"],
-  "sentimentScore": 85,
-  "verdict": "Overall verdict text here...",
-  "confidenceScore": 92
-}`;
-
-  const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const apiEndpoint = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8001"}/analyze`;
 
   try {
     const response = await fetch(apiEndpoint, {
@@ -28,36 +20,28 @@ Provide the output as a JSON object with the exact following structure, no markd
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        system_instruction: {
-          parts: { text: systemPrompt }
-        },
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: reviews }]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          responseMimeType: "application/json"
-        }
+        reviews: reviewArray
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
       console.error("API Error:", errorData);
-      throw new Error(errorData?.error?.message || "Failed to generate verdict from Gemini API");
+      throw new Error(errorData?.detail || "Failed to generate verdict from backend");
     }
 
     const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    if (!content) {
-      throw new Error("Invalid response structure from Gemini API");
-    }
+    // Map backend response back to the frontend's expected VerdictData structure
+    const mappedVerdict: VerdictData = {
+      pros: data.pros || [],
+      cons: data.cons || [],
+      sentimentScore: Math.round((data.sentiment_score || 0) * 100),
+      verdict: language === 'ar' ? data.language.ar : data.language.en,
+      confidenceScore: Math.round((data.confidence || 0) * 100)
+    };
 
-    return JSON.parse(content) as VerdictData;
+    return mappedVerdict;
   } catch (error: any) {
     console.error("Error generating verdict:", error);
     throw new Error(error.message || "Failed to generate verdict");
