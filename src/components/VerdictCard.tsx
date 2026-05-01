@@ -133,28 +133,14 @@ export function VerdictCard({ data, language }: VerdictCardProps) {
           </h3>
           <p className="text-[14px] text-foreground font-medium italic relative z-10 leading-relaxed">
             {isArabic 
-              ? "\"معظم المراجعات الإيجابية تشير إلى نظام تعليق العجلات كـ 'نقطة تحول' للأطفال النائمين.\""
-              : "\"Most positive reviews mention the wheels' suspension as the 'game changer' for sleepy infants.\""}
+              ? "\"معظم المراجعات تسلط الضوء على سهولة الاستخدام كعامل رئيسي في رضا العملاء.\""
+              : "\"Most reviews highlight the ease of use and overall quality as key factors in customer satisfaction.\""}
           </p>
           <div className="flex gap-2 pt-2 relative z-10">
-            <span className="text-[11px] bg-primary/10 text-primary px-3 py-1.5 rounded-full font-bold">#UrbanLiving</span>
-            <span className="text-[11px] bg-primary/10 text-primary px-3 py-1.5 rounded-full font-bold">#StrollerQuality</span>
+            <span className="text-[11px] bg-primary/10 text-primary px-3 py-1.5 rounded-full font-bold">#QualityInsights</span>
+            <span className="text-[11px] bg-primary/10 text-primary px-3 py-1.5 rounded-full font-bold">#UserFavorite</span>
           </div>
         </div>
-
-        {/* Image */}
-        <div className="relative w-full h-48 sm:h-56 rounded-[1.5rem] overflow-hidden mt-8">
-          <img 
-            src="/stroller.png" 
-            alt="Stroller Visual" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <div className="absolute bottom-5 left-5 text-white font-bold text-sm tracking-wide">
-            Visualizing Comfort
-          </div>
-        </div>
-
       </div>
     </div>
   );
