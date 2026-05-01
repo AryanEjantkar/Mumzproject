@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -16,12 +17,13 @@ load_dotenv()
 _api_key = os.getenv("GEMINI_API_KEY") or os.getenv("VITE_GEMINI_API_KEY")
 genai.configure(api_key=_api_key)
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+# Using gemini-2.5-flash as confirmed available in the environment
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+model = genai.GenerativeModel(MODEL_NAME)
 
 app = FastAPI()
 
-# In production, set ALLOWED_ORIGINS to your frontend URL, e.g.:
-# ALLOWED_ORIGINS=https://your-frontend.vercel.app
+# In production, set ALLOWED_ORIGINS to your frontend URL
 _raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
 _allowed_origins = [o.strip() for o in _raw_origins.split(",")] if _raw_origins != "*" else ["*"]
 
@@ -65,23 +67,35 @@ def extract_json(text):
 def chunk_reviews(reviews, size=10):
     return [reviews[i:i+size] for i in range(0, len(reviews), size)]
 
-# ----------- Helper: Gemini call with retry -----------
-def call_with_retry(prompt, max_retries=3):
+# ----------- Helper: Gemini call with retry (Async) -----------
+async def call_with_retry(prompt, max_retries=3):
+    start_time = time.time()
     for attempt in range(max_retries):
+        # Safety check: if we've already spent > 20s, don't retry again to avoid Render timeout
+        if time.time() - start_time > 20:
+            break
+            
         try:
-            return model.generate_content(prompt)
+            # Use the async version of generate_content
+            response = await model.generate_content_async(prompt)
+            return response
         except Exception as e:
-            err_str = str(e)
-            if "429" in err_str or "quota" in err_str.lower():
-                wait = 60  # wait 60s on rate limit
-                print(f"[RATE LIMIT] 429 hit. Waiting {wait}s before retry {attempt+1}/{max_retries}...")
-                time.sleep(wait)
+            err_str = str(e).lower()
+            # Handle rate limiting (429) or quota issues
+            if any(x in err_str for x in ["429", "quota", "resource_exhausted", "limit"]):
+                # Short exponential backoff to stay within 30s window
+                wait = 2 * (attempt + 1) 
+                print(f"[RATE LIMIT] Hit on attempt {attempt+1}. Waiting {wait}s...")
+                await asyncio.sleep(wait)
             else:
+                # Re-raise other errors immediately
+                print(f"[ERROR] API Call failed: {e}")
                 raise
-    raise Exception("Max retries exceeded due to rate limiting.")
+                
+    raise Exception("Max retries exceeded or request timed out due to rate limiting.")
 
-# ----------- Step 1: Analyze Each Chunk -----------
-def analyze_chunk(chunk):
+# ----------- Step 1: Analyze Each Chunk (Async) -----------
+async def analyze_chunk(chunk):
     prompt = f"""
     You are an AI analyzing product reviews.
 
@@ -101,13 +115,11 @@ def analyze_chunk(chunk):
     }}
     """
 
-    response = call_with_retry(prompt)
-    
     try:
+        response = await call_with_retry(prompt)
         return extract_json(response.text)
     except Exception as e:
-        print(f"Error parsing analyze_chunk response: {e}")
-        print(f"Raw response: {response.text}")
+        print(f"Error in analyze_chunk: {e}")
         return {"pros": [], "cons": [], "sentiment": "neutral"}
 
 # ----------- Step 2: Aggregate Results -----------
@@ -115,7 +127,6 @@ def aggregate_results(results):
     pros = []
     cons = []
     sentiment_score = 0
-    
     sentiments = []
 
     for r in results:
@@ -133,7 +144,6 @@ def aggregate_results(results):
     total = len(results) if results else 1
     score = (sentiment_score / total + 1) / 2  # normalize 0–1
 
-    # Use Counter for better aggregation (case-insensitive)
     cleaned_pros = [p.strip().lower() for p in pros if p.strip()]
     cleaned_cons = [c.strip().lower() for c in cons if c.strip()]
     
@@ -143,94 +153,79 @@ def aggregate_results(results):
     top_pros = [pro_map[item] for item, count in Counter(cleaned_pros).most_common(5)]
     top_cons = [con_map[item] for item, count in Counter(cleaned_cons).most_common(5)]
 
-    # Compute a baseline confidence penalty based on sentiment variance
     pos_count = sentiments.count("positive")
     neg_count = sentiments.count("negative")
-    # If there are roughly equal highly polarizing sentiments, confidence in a "definitive" verdict drops
     conflict_ratio = 0.0
     if total > 1 and (pos_count > 0 and neg_count > 0):
         conflict_ratio = min(pos_count, neg_count) / max(pos_count, neg_count)
 
     return top_pros, top_cons, score, conflict_ratio
 
-# ----------- Step 3: Final Verdict -----------
-def generate_final(pros, cons, score, num_reviews, conflict_ratio):
+# ----------- Step 3: Final Verdict (Async) -----------
+async def generate_final(pros, cons, score, num_reviews, conflict_ratio):
     prompt = f"""
-    Based on:
-
+    Based on these aggregated insights:
     Pros: {pros}
     Cons: {cons}
     Sentiment score: {score}
-    Total Reviews Analyzed: {num_reviews}
+    Total Reviews: {num_reviews}
 
-    Generate:
-    - Final verdict summarizing the overall sentiment.
-    - Base confidence score (0.0 to 1.0). If there are very few reviews, or contradictory pros/cons, output a lower confidence.
-
+    Generate a final summary verdict.
     Return JSON:
     {{
-      "verdict": "",
-      "confidence": 0.0,
-      "en": "",
-      "ar": ""
+      "verdict": "string summarizing everything",
+      "confidence": 0.0 to 1.0,
+      "en": "english version of verdict",
+      "ar": "arabic version of verdict"
     }}
     """
 
-    response = call_with_retry(prompt)
-
     try:
+        response = await call_with_retry(prompt)
         data = extract_json(response.text)
-        # Cap confidence if there are very few reviews or high conflict
+        
+        # Apply confidence penalties
         base_conf = data.get("confidence", 0.8)
-        
-        # Penalize confidence for small sample size
-        review_penalty = min(1.0, num_reviews / 5.0) # max confidence scaling requires at least 5 reviews
-        
-        # Penalize confidence for highly conflicting sentiments
+        review_penalty = min(1.0, num_reviews / 5.0)
         conflict_penalty = 1.0 - (conflict_ratio * 0.4)
         
-        # Calculate final confidence
         final_conf = base_conf * review_penalty * conflict_penalty
         data["confidence"] = round(min(1.0, max(0.0, final_conf)), 2)
         
         return data
     except Exception as e:
-        print(f"Error parsing generate_final response: {e}")
-        print(f"Raw response: {response.text}")
+        print(f"Error in generate_final: {e}")
         return {
             "verdict": "Insufficient data",
             "confidence": 0.3,
-            "en": "Not enough data",
-            "ar": "لا توجد بيانات كافية"
+            "en": "Analysis incomplete due to rate limits",
+            "ar": "التحليل غير مكتمل بسبب قيود السرعة"
         }
 
-# ----------- Health Check -----------
+# ----------- Routes -----------
 @app.get("/health")
 def health():
-    return {"status": "ok", "model": "gemini-2.5-flash"}
+    return {"status": "ok", "model": MODEL_NAME}
 
-# ----------- API Route -----------
 @app.post("/analyze")
-def analyze(data: ReviewInput):
+async def analyze(data: ReviewInput):
     try:
         num_reviews = len(data.reviews)
         if num_reviews == 0:
             return {
-                "pros": [],
-                "cons": [],
-                "sentiment_score": 0.5,
-                "verdict": "No reviews provided.",
-                "confidence": 0.0,
-                "language": {
-                    "en": "No reviews provided.",
-                    "ar": "لم يتم تقديم أي مراجعات."
-                }
+                "pros": [], "cons": [], "sentiment_score": 0.5,
+                "verdict": "No reviews provided.", "confidence": 0.0,
+                "language": {"en": "No reviews provided.", "ar": "لم يتم تقديم أي مراجعات."}
             }
 
         chunks = chunk_reviews(data.reviews)
-        results = [analyze_chunk(chunk) for chunk in chunks]
+        
+        # Parallel chunk analysis
+        chunk_tasks = [analyze_chunk(chunk) for chunk in chunks]
+        results = await asyncio.gather(*chunk_tasks)
+        
         pros, cons, score, conflict_ratio = aggregate_results(results)
-        final = generate_final(pros, cons, score, num_reviews, conflict_ratio)
+        final = await generate_final(pros, cons, score, num_reviews, conflict_ratio)
 
         return {
             "pros": pros,
@@ -246,4 +241,4 @@ def analyze(data: ReviewInput):
     except Exception as e:
         print("\n[ERROR] Exception in /analyze:")
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
