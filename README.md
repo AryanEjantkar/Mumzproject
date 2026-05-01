@@ -33,11 +33,12 @@ An AI-powered system that transforms large volumes of product reviews into a cle
 2. Click Generate Verdict 
 3. System analyzes reviews in chunks  
 4. Aggregates insights
-5. Displays:Pros
-   -Cons
-  -Sentiment score
-  -Final verdict
-  -Confidence score
+5. Displays:
+  Pros
+  Cons
+  Sentiment score
+  Final verdict
+  Confidence score
 ---
 ##  Tech Stack
 | Layer | Technology |
@@ -51,8 +52,8 @@ An AI-powered system that transforms large volumes of product reviews into a cle
 
 ---
 ##  Installation & Usage
-git clone https://github.com/your-username/momsverdict-ai.git
-cd momsverdict-ai
+git clone [https://github.com/AryanEjantkar/Mumzproject.git]
+cd momsverdict
 
 # Backend
 pip install -r requirements.txt
