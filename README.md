@@ -65,6 +65,10 @@ npm install
 npm run dev
 
 ---
+# Deployment Link
+https://mumzproject.vercel.app/
+
+---
 ##  Future Enhancements
 - Product comparison engine
 - Review authenticity detection (fake reviews)
