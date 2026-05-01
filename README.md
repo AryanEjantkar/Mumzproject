@@ -52,8 +52,9 @@ An AI-powered system that transforms large volumes of product reviews into a cle
 
 ---
 ##  Installation & Usage
-git clone [https://github.com/AryanEjantkar/Mumzproject.git]
-cd momsverdict
+git clone [[https://github.com/AryanEjantkar/Mumzproject.git](https://github.com/AryanEjantkar/Mumzproject.git)]
+cd Mumzproject
+
 
 # Backend
 pip install -r requirements.txt
